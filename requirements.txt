@@ -1,0 +1,5 @@
+# 浙江大学选课辅助数据库与均绩排行系统
+# 运行时采用纯 Python 3.10+ 标准库实现，无需安装任何第三方运行时依赖。
+#
+# 如需将本项目打包为 Windows 单文件发布版 (.exe)，请安装构建依赖：
+# pip install -r requirements-build.txt

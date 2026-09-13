@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>课程均绩排行与智能选课筛选</title>
+  <link rel="stylesheet" href="/style.css?v=20260913-1">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-row">
+      <div class="brand">
+        <span class="brand-title">课程均绩排行</span>
+        <span class="brand-subtitle">智能排课与均绩筛选系统</span>
+      </div>
+      <div class="header-note">by Alisio</div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <nav class="nav-tabs" role="tablist" aria-label="页面功能切换">
+      <button class="nav-tab active" data-target="filter-view" type="button" role="tab" aria-selected="true">
+        <span class="tab-icon">📅</span> 全校课程筛选与排序
+      </button>
+      <button class="nav-tab" data-target="search-view" type="button" role="tab" aria-selected="false">
+        <span class="tab-icon">🔍</span> 单门课程检索
+      </button>
+      <button class="nav-tab" data-target="batch-view" type="button" role="tab" aria-selected="false">
+        <span class="tab-icon">📋</span> 批量培养方案排名
+      </button>
+    </nav>
+
+    <!-- 视图一：全校课程筛选与排序 -->
+    <section id="filter-view" class="view-panel active">
+      <div class="panel-intro">
+        <p class="eyebrow">全校课程 · 智能排课与均绩分析</p>
+        <h1>全校课程综合筛选与均绩降序排行</h1>
+        <p class="hint">
+          支持基于 <strong>7×13 图形化课程表时间嵌入</strong> 和 <strong>两级课程种类层级</strong> 组合筛选。
+          筛选的基本单位为<strong>教学班</strong>，仅保留上课时间完全嵌入在所选时段内的教学班，并按课程所剩教学班的<strong>最大均绩由高到低降序排列</strong>。
+        </p>
+      </div>
+
+      <!-- 筛选控制区域 -->
+      <div class="filter-controls-card">
+        <!-- 控制模块一：课程种类层级筛选 -->
+        <div class="filter-block">
+          <div class="block-header">
+            <span class="block-num">1</span>
+            <div>
+              <h2 class="block-title">课程种类层级筛选</h2>
+              <p class="block-desc">梳理自本科培养方案的两级分类体系，可先选大类、再选具体二级子类</p>
+            </div>
+          </div>
+          <div class="category-selectors">
+            <div class="category-level-group">
+              <span class="level-label">一级大类：</span>
+              <div id="category-l1-container" class="pill-group">
+                <button type="button" class="pill-btn active" data-val="">全部大类 (<span id="cat-total-count">-</span>)</button>
+              </div>
+            </div>
+            <div class="category-level-group">
+              <span class="level-label">二级子类：</span>
+              <div id="category-l2-container" class="pill-group">
+                <button type="button" class="pill-btn active" data-val="">全部二级分类</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 控制模块二：图形化课程表时间筛选 -->
+        <div class="filter-block">
+          <div class="block-header">
+            <span class="block-num">2</span>
+            <div>
+              <h2 class="block-title">图形化课程表时间嵌入筛选（7天 × 13节）</h2>
+              <p class="block-desc">点击单元格选择允许上课的时段（绿色高亮）。<strong>严格全时段嵌入原则：某一个教学班能够嵌入的前提是其列出的【所有上课时间】均能完整嵌入在所选时段内（缺一不可）</strong>，以课程为单位展示合格班级及最高均绩。</p>
+            </div>
+          </div>
+
+          <!-- 快捷操作工具栏 -->
+          <div class="timetable-toolbar">
+            <div class="tt-presets">
+              <button type="button" class="preset-btn" id="tt-btn-all">全选</button>
+              <button type="button" class="preset-btn" id="tt-btn-clear">清空</button>
+              <button type="button" class="preset-btn" id="tt-btn-weekdays">工作日(周一至周五)</button>
+              <button type="button" class="preset-btn" id="tt-btn-morning">仅上午(1-5节)</button>
+              <button type="button" class="preset-btn" id="tt-btn-afternoon">仅下午(6-10节)</button>
+              <button type="button" class="preset-btn" id="tt-btn-evening">仅晚上(11-13节)</button>
+              <button type="button" class="preset-btn" id="tt-btn-no-early">无早八(避开1-2节)</button>
+              <button type="button" class="preset-btn" id="tt-btn-invert">反选</button>
+            </div>
+            <div class="tt-status">
+              <span id="tt-selected-count" class="tt-counter">已选 91 / 91 个时段</span>
+            </div>
+          </div>
+
+          <!-- 7x13 课程表格网格 -->
+          <div class="timetable-wrapper">
+            <table class="timetable-grid" id="timetable-grid" aria-label="7x13课程表时间选择器">
+              <thead>
+                <tr>
+                  <th class="col-header corner">节次 / 时段</th>
+                  <th class="col-header day-header" data-day="1">周一</th>
+                  <th class="col-header day-header" data-day="2">周二</th>
+                  <th class="col-header day-header" data-day="3">周三</th>
+                  <th class="col-header day-header" data-day="4">周四</th>
+                  <th class="col-header day-header" data-day="5">周五</th>
+                  <th class="col-header day-header weekend" data-day="6">周六</th>
+                  <th class="col-header day-header weekend" data-day="7">周日</th>
+                </tr>
+              </thead>
+              <tbody id="timetable-body">
+                <!-- 动态生成 13 行 -->
+              </tbody>
+            </table>
+          </div>
+          <div class="timetable-legend">
+            <span class="legend-item"><span class="legend-box active"></span> 允许上课时段（绿色高亮）</span>
+            <span class="legend-item"><span class="legend-box inactive"></span> 冲突/不可排课时段（灰色）</span>
+            <span class="legend-tip">💡 提示：可直接点击单元格切换，也可点击行头、列头整行整列快速切换，支持鼠标拖选。</span>
+          </div>
+        </div>
+
+        <!-- 控制模块三：样本数量阈值与辅助过滤 -->
+        <div class="filter-block">
+          <div class="block-header">
+            <span class="block-num">3</span>
+            <div>
+              <h2 class="block-title">样本数量阈值与辅助过滤</h2>
+              <p class="block-desc">筛选剔除样本人数低于阈值的均绩数据，支持设置最低样本量、均绩门槛与课程名检索</p>
+            </div>
+          </div>
+          <div class="aux-filter-row">
+            <div class="samples-threshold-group">
+              <label for="min-samples-input" class="input-label">最低样本数量阈值（样本人数）：</label>
+              <div class="samples-input-wrap">
+                <input id="min-samples-input" type="number" step="5" min="0" placeholder="例如：20">
+                <div class="samples-preset-pills">
+                  <button type="button" class="sample-pill active" data-samples="">不限</button>
+                  <button type="button" class="sample-pill" data-samples="10">≥ 10 人</button>
+                  <button type="button" class="sample-pill" data-samples="20">≥ 20 人</button>
+                  <button type="button" class="sample-pill" data-samples="30">≥ 30 人</button>
+                  <button type="button" class="sample-pill" data-samples="50">≥ 50 人</button>
+                  <button type="button" class="sample-pill" data-samples="100">≥ 100 人</button>
+                </div>
+              </div>
+            </div>
+            <div class="gpa-threshold-group">
+              <label for="min-gpa-input" class="input-label">最低均绩门槛（可选）：</label>
+              <div class="gpa-input-wrap">
+                <input id="min-gpa-input" type="number" step="0.1" min="0" max="5.0" placeholder="例如：4.0">
+                <div class="gpa-preset-pills">
+                  <button type="button" class="gpa-pill active" data-gpa="">不限</button>
+                  <button type="button" class="gpa-pill" data-gpa="3.8">≥ 3.8</button>
+                  <button type="button" class="gpa-pill" data-gpa="4.0">≥ 4.0</button>
+                  <button type="button" class="gpa-pill" data-gpa="4.2">≥ 4.2</button>
+                </div>
+              </div>
+            </div>
+            <div class="keyword-search-group">
+              <label for="filter-keyword-input" class="input-label">课程名称检索：</label>
+              <input id="filter-keyword-input" type="search" placeholder="包含词，例如：微积分、计算机、网络">
+            </div>
+            <div class="keyword-exclude-group">
+              <label for="filter-exclude-input" class="input-label">课程名排除关键词：</label>
+              <div class="exclude-input-wrap">
+                <input id="filter-exclude-input" type="search" placeholder="排除词，多个空格/逗号分隔（如：实验 体育）">
+                <div class="exclude-preset-pills">
+                  <button type="button" class="exclude-pill" data-exclude="实验">+ 实验</button>
+                  <button type="button" class="exclude-pill" data-exclude="体育">+ 体育</button>
+                  <button type="button" class="exclude-pill" data-exclude="实习">+ 实习</button>
+                  <button type="button" class="exclude-pill" data-exclude="实践">+ 实践</button>
+                  <button type="button" class="exclude-pill" data-exclude="导论">+ 导论</button>
+                  <button type="button" class="exclude-pill" data-exclude="讲座">+ 讲座</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-action-row">
+            <button type="button" id="apply-filter-btn" class="primary-btn">立即筛选与排序</button>
+            <button type="button" id="reset-filter-btn" class="secondary-btn">重置全部条件</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 筛选结果展示区域 -->
+      <section id="filter-results-section" class="results-section">
+        <div class="results-summary-bar" id="filter-summary-bar">
+          <div class="summary-text" id="filter-summary-text">正在初始化全校课程数据...</div>
+          <div class="page-size-selector">
+            <label for="page-size-select">每页展示：</label>
+            <select id="page-size-select">
+              <option value="20" selected>20 门</option>
+              <option value="40">40 门</option>
+              <option value="60">60 门</option>
+              <option value="100">100 门</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="filter-courses-container" class="courses-container"></div>
+
+        <!-- 分页控制栏 -->
+        <div id="filter-pagination" class="pagination-bar" hidden>
+          <button type="button" id="page-prev" class="page-btn" disabled>上一页</button>
+          <span id="page-indicator" class="page-indicator">第 1 / 1 页</span>
+          <button type="button" id="page-next" class="page-btn">下一页</button>
+        </div>
+      </section>
+    </section>
+
+    <!-- 视图二：单门课程检索 -->
+    <section id="search-view" class="view-panel" hidden>
+      <section class="search-panel" aria-labelledby="search-heading">
+        <div>
+          <p class="eyebrow">课程检索</p>
+          <h2 id="search-heading">按课程名称查找任课老师均绩</h2>
+        </div>
+        <form id="search-form" class="search-form">
+          <label class="sr-only" for="search-input">课程名称</label>
+          <input id="search-input" type="search" autocomplete="off" placeholder="例如：线性代数（甲）" required minlength="2">
+          <button type="submit">搜索课程</button>
+        </form>
+        <p class="hint">基于本地静态数据进行模糊课程名搜索。选择课程后，将汇集全部任课老师的课程均绩并按由高到低排序，同时展示课程学分与分类。</p>
+      </section>
+      <section id="search-results" class="results-section" hidden aria-live="polite"></section>
+    </section>
+
+    <!-- 视图三：批量培养方案排名 -->
+    <section id="batch-view" class="view-panel" hidden>
+      <section class="import-section" aria-labelledby="import-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">培养方案</p>
+            <h2 id="import-heading">批量课程排名</h2>
+          </div>
+        </div>
+        <p class="hint">每行输入一门课程名称，支持一次输入多门课程，最多排名 80 门。将展示每门课程学分及所收录老师的均绩最高值。</p>
+        <label class="sr-only" for="plan-input">批量课程名称</label>
+        <textarea id="plan-input" rows="7" placeholder="例如：
+线性代数（甲）
+军事理论
+计算机网络"></textarea>
+        <div class="batch-actions">
+          <button id="batch-rank" type="button" disabled>获取批量课程排行</button>
+          <span id="batch-status" class="status-text"></span>
+        </div>
+      </section>
+      <section id="batch-results" class="results-section" hidden></section>
+    </section>
+  </main>
+
+  <!-- 课程结果卡片模板 -->
+  <template id="course-template">
+    <article class="course-result">
+      <div class="course-summary">
+        <div class="course-main-info">
+          <div class="course-title-row">
+            <h3 class="course-name"></h3>
+            <span class="badge badge-credit"></span>
+            <span class="badge badge-category"></span>
+          </div>
+          <p class="course-meta"></p>
+        </div>
+        <button class="rank-button" type="button">获取均绩排行</button>
+      </div>
+      <div class="ranking-area" hidden></div>
+    </article>
+  </template>
+
+  <script src="/app.js?v=20260913-1"></script>
+</body>
+</html>
